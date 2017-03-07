@@ -9,7 +9,11 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 #include <time.h>
+//dependance pour capteur DHT11
 #include "DHT.h"
+//dependances pour capteur I2C MPL115A2
+#include <Wire.h>
+#include <Adafruit_MPL115A2.h>
 /* for feather32u4 */
 #define RFM95_CS 8
 #define RFM95_RST 4
@@ -64,6 +68,8 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 #define DHTTYPE DHT11
 
 DHT dht(DHTPIN,DHTTYPE);
+Adafruit_MPL115A2 mpl115a2;
+
 void setup() 
 {
   pinMode(LED, OUTPUT);     
@@ -103,37 +109,51 @@ void setup()
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
   srand(time(NULL));
+  
+  Serial.println("Getting humidity and temperature from DHT11 ...");
   dht.begin();
+  
+  Serial.println("Getting barometric pressure from Adafruit_MPL115A2 ...");
+  mpl115a2.begin();
   }
  
 void loop()
 {
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
-      digitalWrite(LED, HIGH);
-      delay(10);
+  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+  digitalWrite(LED, HIGH);
+  delay(10);
       
-      // Send 
-      double temperature;
-      double humidite;
-      double numero;
+  // Send 
+  double temperature;
+  double humidite;
+  double numero;
+  float pressureKPA = 0, temperatureC = 0; 
       
       
-      temperature = dht.readTemperature(false);
-      humidite = dht.readHumidity();
-      numero=1;
+  temperature = dht.readTemperature(false);
+  humidite = dht.readHumidity();
+  pressureKPA = mpl115a2.getPressure();
+  temperatureC = mpl115a2.getTemperature(); 
+  numero=1;
+     
+  uint8_t *data;
+  data = reinterpret_cast<uint8_t*>(&temperature);
+  // data = (uint8_t*)(&temperature);
       
-      uint8_t *data;
-      data = reinterpret_cast<uint8_t*>(&temperature);
-     // data = (uint8_t*)(&temperature);
-      
-      uint8_t *data2;
-       data2 = reinterpret_cast<uint8_t*>(&humidite); 
+  uint8_t *data2;
+  data2 = reinterpret_cast<uint8_t*>(&humidite); 
 
-      uint8_t *data3;
-      data3 = reinterpret_cast<uint8_t*>(&numero);
+  uint8_t *data3;
+  data3 = reinterpret_cast<uint8_t*>(&pressureKPA); 
 
-      uint8_t fi[sizeof(double)*3 / sizeof(uint8_t)];
+  uint8_t *data4;
+  data2 = reinterpret_cast<uint8_t*>(&temperatureC); 
+
+  uint8_t *data5;
+  data3 = reinterpret_cast<uint8_t*>(&numero);
+
+  uint8_t fi[sizeof(double)*5 / sizeof(uint8_t)];
       int i; 
       for(i=0;i<4;i++){
       fi[i]=data[i];
@@ -144,13 +164,23 @@ void loop()
       for(i=8;i<12;i++){
       fi[i]=data3[i-8];
       }
+      for(i=12;i<16;i++){
+      fi[i]=data3[i-12];
+      }
+      for(i=16;i<20;i++){
+      fi[i]=data3[i-16];
+      }
       
-      rf95.send(fi, sizeof(double)*3);
+      rf95.send(fi, sizeof(double)*3+sizeof(float)*2);
       rf95.waitPacketSent();
-      Serial.print("Temperature : " );
+      Serial.print("Temperature DHT11 : " );
       Serial.print(temperature);
       Serial.print(" , Humidite : ");
       Serial.print(humidite);
+      Serial.print(" , Temperature MPL115A2 : ");
+      Serial.print(temperatureC);
+      Serial.print(" , Pression atmospherique : ");
+      Serial.print(pressureKPA);
       Serial.print("\n");
       digitalWrite(LED, LOW);
       delay(10000);
