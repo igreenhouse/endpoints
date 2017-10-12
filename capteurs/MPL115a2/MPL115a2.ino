@@ -5,6 +5,17 @@
 // reliability, so you should only use RH_RF95 if you do not need the higher
 // level messaging abilities.
 // It is designed to work with the other example Feather9x_TX
+
+// For MPL115a2:
+// https://www.adafruit.com/product/992
+
+// Using the sensor is easy. For example, if you're using an Arduino,
+// simply connect the VIN pin to the 5V voltage pin, GND to ground,
+// SCL to I2C Clock (Analog 5 on an UNO) and SDA to I2C Data (Analog 4 on an UNO).
+
+// On Feather:
+// I2C clock is on pin 3
+// I2C data is on pin 2
  
 #include <SPI.h>
 #include <RH_RF95.h>
@@ -16,43 +27,6 @@
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 7
- 
-/* for feather m0  
-#define RFM95_CS 8
-#define RFM95_RST 4
-#define RFM95_INT 3
-*/
- 
-/* for shield 
-#define RFM95_CS 10
-#define RFM95_RST 9
-#define RFM95_INT 7
-*/
- 
- 
-/* for ESP w/featherwing 
-#define RFM95_CS  2    // "E"
-#define RFM95_RST 16   // "D"
-#define RFM95_INT 15   // "B"
-*/
- 
-/* Feather 32u4 w/wing
-#define RFM95_RST     11   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     2    // "SDA" (only SDA/SCL/RX/TX have IRQ!)
-*/
- 
-/* Feather m0 w/wing 
-#define RFM95_RST     11   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     6    // "D"
-*/
- 
-/* Teensy 3.x w/wing 
-#define RFM95_RST     9   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     4    // "C"
-*/
  
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF95_FREQ 868.0
@@ -71,7 +45,7 @@ void setup()
   pinMode(RFM95_RST, OUTPUT);  
   digitalWrite(RFM95_RST, HIGH);
  
-  while (!Serial);
+  //while (!Serial);
   Serial.begin(9600);
   delay(100);
  
